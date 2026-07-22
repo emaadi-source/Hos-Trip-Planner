@@ -4,6 +4,16 @@
 
 ---
 
+<img width="452" height="645" alt="image" src="https://github.com/user-attachments/assets/271e7b84-f14f-4f57-a754-f2bb1c763ba0" />
+
+---
+#  Walkthrough
+https://www.loom.com/share/599014a710ab4598b11a27b5c44e867d
+---
+
+<img width="452" height="645" alt="image" src="https://github.com/user-attachments/assets/271e7b84-f14f-4f57-a754-f2bb1c763ba0" />
+
+---
 ## 📌 Overview
 
 The **Hours of Service (HOS) Trip Planner** is a full-stack route planning application designed to assist commercial drivers in planning trips while complying with Hours of Service regulations.
@@ -137,20 +147,6 @@ http://127.0.0.1:5173
 
 ---
 
-# 📸 Application
-
-> Add screenshots or a demo GIF here.
-
-Example:
-
-```
-/screenshots/home.png
-/screenshots/results.png
-/screenshots/map.png
-```
-
----
-
 # ⚙️ Key Functionalities
 
 - Trip Planning
@@ -177,9 +173,9 @@ Example:
 
 # 👨‍💻 Author
 
-**Aryan**
+**M Immad**
 
-Software Engineering Student
+CS Student
 
 GitHub:
 https://github.com/emaadi-source
