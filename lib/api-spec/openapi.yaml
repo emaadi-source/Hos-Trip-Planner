@@ -1,0 +1,394 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: HOS Trip Planner API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: trip
+    description: Trip planning and ELD log generation
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /trip/plan:
+    post:
+      operationId: planTrip
+      tags: [trip]
+      summary: Plan a trip with HOS-compliant route and ELD logs
+      description: >
+        Takes trip inputs and returns a route with HOS-compliant rest/fuel stops
+        and filled-out Driver Daily Log sheets following FMCSA regulations
+        (11-hour driving limit, 14-hour window, 30-min break, 70hr/8-day cycle).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripInput"
+      responses:
+        "200":
+          description: Trip plan with route and ELD logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripPlan"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trip/geocode:
+    get:
+      operationId: geocodeLocation
+      tags: [trip]
+      summary: Geocode a location string to coordinates
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Location string to geocode
+      responses:
+        "200":
+          description: Geocoded location results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeocodedLocation"
+        "400":
+          description: Invalid query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    TripInput:
+      type: object
+      required:
+        - currentLocation
+        - pickupLocation
+        - dropoffLocation
+        - currentCycleUsed
+      properties:
+        currentLocation:
+          type: string
+          description: Driver's current location (city, state or address)
+          example: "Chicago, IL"
+        pickupLocation:
+          type: string
+          description: Cargo pickup location
+          example: "St. Louis, MO"
+        dropoffLocation:
+          type: string
+          description: Cargo dropoff location
+          example: "Dallas, TX"
+        currentCycleUsed:
+          type: number
+          minimum: 0
+          maximum: 70
+          description: Hours already used in the current 70-hour/8-day cycle
+          example: 24
+
+    TripPlan:
+      type: object
+      required:
+        - route
+        - stops
+        - eldLogs
+        - summary
+      properties:
+        route:
+          $ref: "#/components/schemas/RouteInfo"
+        stops:
+          type: array
+          items:
+            $ref: "#/components/schemas/Stop"
+        eldLogs:
+          type: array
+          items:
+            $ref: "#/components/schemas/EldLog"
+        summary:
+          $ref: "#/components/schemas/TripSummary"
+
+    RouteInfo:
+      type: object
+      required:
+        - totalDistanceMiles
+        - totalDrivingHours
+        - polyline
+        - segments
+      properties:
+        totalDistanceMiles:
+          type: number
+          description: Total trip distance in miles
+        totalDrivingHours:
+          type: number
+          description: Total pure driving time in hours
+        polyline:
+          type: array
+          description: Array of [lat, lng] coordinate pairs for the route
+          items:
+            type: array
+            items:
+              type: number
+            minItems: 2
+            maxItems: 2
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteSegment"
+
+    RouteSegment:
+      type: object
+      required:
+        - from
+        - to
+        - distanceMiles
+        - durationHours
+        - fromCoords
+        - toCoords
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        distanceMiles:
+          type: number
+        durationHours:
+          type: number
+        fromCoords:
+          type: array
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+        toCoords:
+          type: array
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+
+    Stop:
+      type: object
+      required:
+        - type
+        - location
+        - lat
+        - lng
+        - arrivalDay
+        - arrivalHour
+        - durationHours
+        - cumulativeMiles
+        - notes
+      properties:
+        type:
+          type: string
+          enum: [start, pickup, dropoff, rest, fuel, break]
+          description: Type of stop
+        location:
+          type: string
+          description: Human-readable location name
+        lat:
+          type: number
+        lng:
+          type: number
+        arrivalDay:
+          type: integer
+          description: Day number (1-based) of arrival
+        arrivalHour:
+          type: number
+          description: Hour of day (0-24) of arrival
+        durationHours:
+          type: number
+          description: Time spent at this stop in hours
+        cumulativeMiles:
+          type: number
+          description: Total miles driven to reach this stop
+        notes:
+          type: string
+          description: Reason for stop / regulatory citation
+
+    EldLog:
+      type: object
+      required:
+        - date
+        - dayNumber
+        - startLocation
+        - endLocation
+        - totalMilesDriving
+        - totalMilesToday
+        - entries
+        - remarks
+        - totalHoursOffDuty
+        - totalHoursSleeperBerth
+        - totalHoursDriving
+        - totalHoursOnDutyNotDriving
+        - recap
+      properties:
+        date:
+          type: string
+          description: Date in YYYY-MM-DD format
+        dayNumber:
+          type: integer
+          description: 1-based day number of the trip
+        startLocation:
+          type: string
+        endLocation:
+          type: string
+        totalMilesDriving:
+          type: number
+          description: Miles driven today
+        totalMilesToday:
+          type: number
+          description: Total mileage odometer today
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/DutyStatusEntry"
+        remarks:
+          type: string
+        totalHoursOffDuty:
+          type: number
+        totalHoursSleeperBerth:
+          type: number
+        totalHoursDriving:
+          type: number
+        totalHoursOnDutyNotDriving:
+          type: number
+        recap:
+          $ref: "#/components/schemas/RecapInfo"
+
+    DutyStatusEntry:
+      type: object
+      required:
+        - status
+        - startHour
+        - endHour
+        - location
+      properties:
+        status:
+          type: string
+          enum: [offDuty, sleeperBerth, driving, onDutyNotDriving]
+        startHour:
+          type: number
+          description: Start time as fractional hour (0-24)
+        endHour:
+          type: number
+          description: End time as fractional hour (0-24)
+        location:
+          type: string
+
+    RecapInfo:
+      type: object
+      required:
+        - totalOnDutyToday
+        - totalOnDutyLast7Days
+        - totalOnDutyAvailableTomorrow
+        - cycleHoursUsed
+        - cycleHoursRemaining
+      properties:
+        totalOnDutyToday:
+          type: number
+        totalOnDutyLast7Days:
+          type: number
+        totalOnDutyAvailableTomorrow:
+          type: number
+        cycleHoursUsed:
+          type: number
+        cycleHoursRemaining:
+          type: number
+
+    TripSummary:
+      type: object
+      required:
+        - totalDays
+        - totalDrivingHours
+        - totalOnDutyHours
+        - totalDistanceMiles
+        - hosCompliant
+        - warnings
+        - fuelStops
+        - restStops
+        - breakStops
+      properties:
+        totalDays:
+          type: integer
+        totalDrivingHours:
+          type: number
+        totalOnDutyHours:
+          type: number
+        totalDistanceMiles:
+          type: number
+        hosCompliant:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+        fuelStops:
+          type: integer
+        restStops:
+          type: integer
+        breakStops:
+          type: integer
+
+    GeocodedLocation:
+      type: object
+      required:
+        - displayName
+        - lat
+        - lng
+      properties:
+        displayName:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
