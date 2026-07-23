@@ -18,11 +18,7 @@ A modern full-stack web application that helps commercial truck drivers plan **H
 
 ### Frontend
 
-https://hos-trip-planner-hos-planner-mocha.vercel.app
-
-### Backend API
-
-https://hos-trip-planner-production.up.railway.app
+https://hos-trip-planner-hos-planner.vercel.app/
 
 ---
 
