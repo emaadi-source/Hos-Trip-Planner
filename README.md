@@ -6,7 +6,6 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)
 ![Vite](https://img.shields.io/badge/Vite-7-purple?logo=vite)
-![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </p>
 
