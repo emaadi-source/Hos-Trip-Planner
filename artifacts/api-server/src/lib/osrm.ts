@@ -17,7 +17,7 @@ interface OsrmResponse {
   }>;
 }
 
-const OSRM_BASE = "http://router.project-osrm.org/route/v1/driving";
+const OSRM_BASE = "https://router.project-osrm.org/route/v1/driving";
 const METERS_PER_MILE = 1609.344;
 
 /**
