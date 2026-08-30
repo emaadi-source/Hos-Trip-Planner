@@ -13,7 +13,7 @@ export async function geocode(query: string): Promise<GeocodeResult[]> {
   url.searchParams.set("q", query);
   url.searchParams.set("format", "json");
   url.searchParams.set("limit", "5");
-  url.searchParams.set("countrycodes", "us");
+//  url.searchParams.set("countrycodes", "us");
 
   const res = await fetch(url.toString(), {
     headers: {
